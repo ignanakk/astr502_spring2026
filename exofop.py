@@ -9,24 +9,23 @@ from exofop.download import System, SystemDownloader
 import numpy as np
 
 data_dir= "./tmp"
-path= r"C:\Users\ilakk\OneDrive\Desktop\astr502\1_20_data\WASP_136\data"
+path= r"C:\Users\ilakk\OneDrive\Desktop\astr502\1_20_data"
 
-
-system= System(name="WASP_136")
+system= System(name="GJ 1214")
 system_loader= SystemDownloader(
     system=system,
     data_dir=path,)
 
 
 tab = system_loader.spectroscopy.table
-print(tab[:5])
+print(tab[:10])
 
 tags= system_loader.spectroscopy.tags
 sorted_tags = np.sort(tags)
 
-system_loader.download(sorted_tags[:5],unzip=True)
+system_loader.download(sorted_tags[:10],unzip=True)
 
-system_loader.download(tags[:5], output_dir=None, unzip=True)  # type: ignore
+system_loader.download(tags[:10], output_dir=None, unzip=True)  # type: ignore
 print(f"Target directory: {system_loader.target_dir}")
 
 
