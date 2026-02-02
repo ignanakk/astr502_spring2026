@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Mon Feb  2 10:40:33 2026
+
+@author: ilakk
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Thu Jan 29 11:34:41 2026
 
 @author: ilakk
@@ -13,7 +20,7 @@ import requests
 
 eso = Eso()
 
-query = "WASP_136"
+query = "GJ_1214"
 results = eso.query_surveys(target=query, survey='HARPS')
 
 #Google Gemini AI:
