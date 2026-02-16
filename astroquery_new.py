@@ -20,7 +20,7 @@ import requests
 
 eso = Eso()
 
-query = "GJ_1214"
+query = "WASP_136"
 results = eso.query_surveys(target=query, survey='HARPS')
 
 #Google Gemini AI:
@@ -72,3 +72,30 @@ if len(results) > 0:
         print("Note: If this is 401, you must run eso.login() first.")
 else:
     print("No results found.")
+    
+    
+# below code generated with help of ChatGPT to get only spectral results
+# if the column exists
+if "Product category" in results.colnames:
+    spec_rows = [("SPECTRUM" in str(x)) for x in results["Product category"]]
+    spec = results[spec_rows]
+else:
+    spec = results
+print("Total rows:", len(results))
+print("Spectrum-like rows:", len(spec))
+print(spec[:10])
+
+# below code generated with help of ChatGPT to get only files containing spectral info
+# choose which table to download from: spec if non-empty, else results
+use = spec if len(spec) > 0 else results
+# pick first row for now
+arc = use["ARCFILE"][0]
+print("Downloading ARCFILE:", arc)
+downloaded = eso.retrieve_data(arc)
+print("Downloaded:", downloaded)
+
+# below code generated with help of ChatGPT to check if file type downloaded correctly as BinTableHDU
+path = downloaded[0] if isinstance(downloaded, (list, tuple)) else downloaded
+hdul = fits.open(path)
+hdul.info()
+# WAVE / FLUX INFO IN BinTableHDU 
