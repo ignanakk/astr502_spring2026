@@ -13,7 +13,7 @@ eso = Eso()
 query = 'HIP 67522' 
 instrument = 'HARPS' 
 
-results = eso.query_surveys(target=query, survey=instrument)
+results = eso.query_surveys(target=query, surveys=instrument)
 
 if results is None or len(results) == 0:
     raise ValueError(f"No results found for {query}.")
@@ -36,6 +36,8 @@ target_dir = r"C:\Users\ilakk\OneDrive\Desktop\astr502\working_dowloads"
 timestamp = int(time.time())
 filename = f"{query}_{instrument}_{timestamp}.fits"
 path = os.path.join(target_dir, filename)
+
+
 #path = os.path.join(os.path.expanduser("~"), "eso_temp_file1.fits")
 
 #GEMINI AI
@@ -61,6 +63,8 @@ except Exception as e:
 if path and os.path.exists(path):
     with fits.open(path) as hdul:
         hdul.info()
+        Header=hdul[1].header
+        print(Header)
         # HARPS 'ADP' files usually store data in Extension 1
         ext = 1 if len(hdul) > 1 else 0
         data_table = hdul[ext].data
@@ -119,3 +123,5 @@ plot_feature(graphs[1,1], xvals, yvals, 3968.5, 30, 'Ca II K (3968.5 Å)', 'tab:
 
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 plt.show()
+
+print(instrument)

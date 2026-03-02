@@ -21,7 +21,7 @@ import requests
 eso = Eso()
 
 query = "WASP_136"
-results = eso.query_surveys(target=query, survey='HARPS')
+results = eso.query_surveys(target=query, surveys='HARPS')
 
 #Google Gemini AI:
 if len(results) > 0:
