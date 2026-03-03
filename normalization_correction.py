@@ -299,8 +299,8 @@ velocity_km_s = (offset / h_alpha_ref * const.c.to('km/s')).value
 line_configs = {
     'H-Alpha':   {'vac': 6564.61, 'color': 'tab:pink',   'title': 'H-alpha'},
     'Lithium I': {'vac': 6709.61, 'color': 'tab:purple', 'title': 'Lithium'},
-    'Ca II K':   {'vac': 3934.77, 'color': '#71C7A0',    'title': 'Ca II H'}, # Using your 'H' color for the first Ca plot
-    'Ca II H':   {'vac': 3969.59, 'color': '#4B9CD3',    'title': 'Ca II K'}  # Using your 'K' color for the second Ca plot
+    'Ca II K':   {'vac': 3934.77, 'color': '#71C7A0',    'title': 'Ca II H'}, 
+    'Ca II H':   {'vac': 3969.59, 'color': '#4B9CD3',    'title': 'Ca II K'}  
 }
 
 fig, axes = plt.subplots(2, 2, figsize=(10, 8))
@@ -338,4 +338,5 @@ for ax, (name, config) in zip(axes.flatten(), line_configs.items()):
 
 plt.tight_layout(rect=[0, 0.03, 1, 0.93])
 plt.savefig(f"Final_Corrected_Features_{query}.png")
+
 plt.show()
