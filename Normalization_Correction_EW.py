@@ -264,15 +264,29 @@ plt.show()
 #RV value from SIMBAD
 from astroquery.simbad import Simbad
 
-print(Simbad.get_votable_fields()) #see what column names are
+all_fields=Simbad.list_votable_fields() #see what column names are
+print(all_fields)
+
+from astroquery.simbad import Simbad
 
 Simbad.reset_votable_fields()
-Simbad.add_votable_fields('rvz_radvel')    # add the correct column
+Simbad.add_votable_fields('rvz_radvel')
+Simbad.add_votable_fields('mesfe_h')
 
-simbad_result = Simbad.query_object(query) #result table
+simbad_result = Simbad.query_object(query)
 
-rv = simbad_result['rvz_radvel'][0]
+print(simbad_result.colnames) #check column names
+
+rv   = simbad_result['rvz_radvel'][0]
+Teff_columns = simbad_result['mesfe_h.teff'] #multiple measurements
+fe_h = simbad_result['mesfe_h.fe_h'] #metallicity
+
 print(rv)
+print('Teff Values:')
+print(Teff_columns)
+
+Teff_mean = np.mean(simbad_result['mesfe_h.teff']) #average Teff measurement
+print(f'Mean Teff: {Teff_mean}')
 
 #RV correction
 #rv_kms = 36.2119305876328  #from SIMBAD database
@@ -394,3 +408,12 @@ if wave_cahk2 is not None:
     )
     ew_cak = equivalent_width(spectrum_cak, continuum=1, regions=SpectralRegion(3964 * u.AA, 3972 * u.AA))
     print(f"Ca II K EW: {ew_cak:.3f}")
+
+#import CSV
+import pandas as pd
+df = pd.read_csv(r'C:\Users\ilakk\OneDrive\Desktop\astr502\astr502_spring2026\ASTR502_Master_Parameters_List.csv')
+
+df_query = df.loc[df['hostname'] == query]
+t_eff = df_query['tic_teff'].item()
+print(t_eff)
+
