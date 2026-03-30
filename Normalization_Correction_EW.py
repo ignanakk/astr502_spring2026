@@ -18,7 +18,7 @@ import time
 eso = Eso()
 # eso.login('YOUR_USERNAME') 
 
-query = 'EPIC 211822797' 
+query = 'HATS-34'
 instrument = 'HARPS' 
 
 results = eso.query_surveys(target=query, surveys=instrument)
@@ -98,7 +98,7 @@ plt.title(f"Full Spectrum: {query} ({instrument})")
 plt.xlabel("Wavelength (Å)")
 plt.ylabel("Flux")
 plt.show()
-
+'''
 # Detailed Feature Subplots
 fig, graphs = plt.subplots(2, 2, figsize=(12, 10))
 plt.suptitle(f'Key Spectral Features: {query}', fontsize=16)
@@ -106,13 +106,13 @@ plt.suptitle(f'Key Spectral Features: {query}', fontsize=16)
 def plot_feature(ax, wave, flux, center, window, title, color):
     # Define the zoom window
     mask = (wave >= center - window) & (wave <= center + window)
-    '''
+    
     if not np.any(mask):
         ax.text(0.5, 0.5, f'Feature {center}Å\nNot in Range', 
                 ha='center', va='center', transform=ax.transAxes)
         ax.set_title(title)
         return
-    '''
+    
     ax.plot(wave[mask], flux[mask], color=color)
     ax.axvline(x=center, color='black', ls='--')
     ax.set_title(title)
@@ -131,7 +131,7 @@ plot_feature(graphs[1,1], xvals, yvals, 3968.5, 30, 'Ca II K (3968.5 Å)', 'tab:
 
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 plt.show()
-
+'''
 print(instrument)
 
 #normalization (from simran)
@@ -196,7 +196,7 @@ wave_ha,   flux_ha   = local_normalize(spectrum, line_center=6562.801, window=40
 wave_li,   flux_li   = local_normalize(spectrum, line_center=6707.76,  window=15, shoulder=4)   # Lithium — Fe line at 6707.4 nearby
 wave_cahk, flux_cahk = local_normalize(spectrum, line_center=3950.0,   window=30, shoulder=8)   # Ca II H&K
 
-
+'''
 # ==== 4-PANEL PLOT ====
 figures, graphs = plt.subplots(2, 2, figsize=(10, 8))
 plt.suptitle(f'\nLocally Normalized Key Spectral Features for {query}', fontsize=16)
@@ -259,7 +259,7 @@ graphs[1,1].set_xlabel('Wavelength (Å)')
 graphs[1,1].set_ylabel('Normalized Flux')
 
 plt.show()
-
+'''
 
 #RV value from SIMBAD
 from astroquery.simbad import Simbad
@@ -369,7 +369,7 @@ graphs[1,1].set_xlabel('Wavelength (Å)')
 graphs[1,1].set_ylabel('Normalized Flux')
 
 plt.show()
-
+'''
 #equivalent width calculations
 from specutils.analysis import equivalent_width
 
@@ -408,12 +408,138 @@ if wave_cahk2 is not None:
     )
     ew_cak = equivalent_width(spectrum_cak, continuum=1, regions=SpectralRegion(3964 * u.AA, 3972 * u.AA))
     print(f"Ca II K EW: {ew_cak:.3f}")
+'''
+from specutils.analysis import equivalent_width
+from scipy.signal import find_peaks
+from scipy.optimize import curve_fit
 
+#with help of CLAUDE to help figure out what was wrong
+def fit_gaussian_center(wave, flux, center_guess, search_window=1.5):
+    mask = (wave >= center_guess - search_window) & (wave <= center_guess + search_window)
+    w, f = wave[mask], flux[mask]
+
+    if len(w) < 5:
+        print(f"  Too few points near {center_guess:.2f} Å to fit — using guess.")
+        return center_guess
+
+    # Invert so the absorption dip becomes a peak for fitting
+    f_inv = 1.0 - f
+
+    def gaussian(x, amp, cen, sigma, offset):
+        return amp * np.exp(-0.5 * ((x - cen) / sigma) ** 2) + offset
+
+    try:
+        p0 = [f_inv.max(), center_guess, 0.3, 0.0]
+        bounds = (
+            [0,      center_guess - search_window, 0.01, -0.5],
+            [2.0,    center_guess + search_window, 2.0,   0.5],
+        )
+        popt, _ = curve_fit(gaussian, w, f_inv, p0=p0, bounds=bounds, maxfev=5000)
+        fitted_center = popt[1]
+        print(f"  Gaussian fit center: {fitted_center:.4f} Å  (guess was {center_guess:.4f} Å)")
+        return fitted_center
+    except Exception as e:
+        print(f"  Gaussian fit failed ({e}), using guess {center_guess:.4f} Å")
+        return center_guess
+
+
+def compute_ew(wave, flux, nominal_center, search_window=0.2, ew_half_width=0.2, label="line"):
+    
+    if wave is None or flux is None:
+        print(f"  {label}: spectrum region not available.")
+        return None
+
+    # Detect center
+    center = fit_gaussian_center(wave, flux, nominal_center, search_window)
+
+    # Build Spectrum object for just the integration window
+    lo = (center - ew_half_width) * u.AA
+    hi = (center + ew_half_width) * u.AA
+
+    # Clip to available wavelength range
+    if lo.value < wave.min() or hi.value > wave.max():
+        print(f"  {label}: integration window [{lo:.2f}, {hi:.2f}] partly outside spectrum — clipping.")
+        lo = max(lo.value, wave.min() + 0.01) * u.AA
+        hi = min(hi.value, wave.max() - 0.01) * u.AA
+
+    sp = Spectrum(
+        spectral_axis=wave * u.AA,
+        flux=flux * u.dimensionless_unscaled
+    )
+
+    try:
+        ew = equivalent_width(sp, continuum=1, regions=SpectralRegion(lo, hi))
+        # specutils returns negative for absorption — flip sign
+        ew_mA = -ew.to(u.AA).value * 1000  # convert Å → mÅ
+        print(f"  {label} EW = {ew_mA:.1f} mÅ  (center: {center:.4f} Å)")
+        return ew_mA
+    except Exception as e:
+        print(f"  {label} EW calculation failed: {e}")
+        return None
+
+
+# ── Run EW measurements ───────────────────────────────────────────────────────
+print("\n=== Equivalent Width Measurements ===")
+'''
+# H-alpha — wide window is fine here, line is strong
+ew_ha = compute_ew(
+    wave_ha2, flux_ha2,
+    nominal_center=6562.801,
+    search_window=2.0,
+    ew_half_width=3.0,
+    label="H-alpha"
+)
+'''
+# Lithium — narrow window; Fe I at 6707.4 Å
+# Nominal rest wavelength for Li: 6707.76 Å
+ew_li = compute_ew(
+    wave_li2, flux_li2,
+    nominal_center=6707.76,
+    search_window=0.5,   
+    #ew_half_width=0.36,   
+    label="Lithium 6707.76"
+)
+'''
+# Ca II H (3933.66 Å)
+ew_cah = compute_ew(
+    wave_cahk2, flux_cahk2,
+    nominal_center=3933.66,
+    search_window=2.0,
+    ew_half_width=2.0,
+    label="Ca II H"
+)
+
+# Ca II K (3968.47 Å)
+ew_cak = compute_ew(
+    wave_cahk2, flux_cahk2,
+    nominal_center=3968.47,
+    search_window=2.0,
+    ew_half_width=2.0,
+    label="Ca II K"
+)
+'''
+# ── Diagnostic plot: show exactly what was integrated for Li ─────────────────
+if wave_li2 is not None and ew_li is not None:
+    li_center = fit_gaussian_center(wave_li2, flux_li2, 6707.76, search_window=1.0)
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.plot(wave_li2, flux_li2, 'tab:purple', label='Normalized flux')
+    ax.axvline(li_center,  color='black', ls='--', label=f'Li fit center {li_center:.3f} Å')
+    ax.axvline(6707.4,     color='red',   ls=':',  label='Fe I 6707.4 Å')
+    ax.axhline(1.0,        color='gray',  ls=':',  lw=0.8)
+    ax.axvspan(li_center - .35, li_center + .35, alpha=0.15, color='purple', label='EW integration window')
+    ax.set_title(f'Lithium 6707.76 Å — EW = {ew_li:.1f} mÅ')
+    ax.set_xlabel('Wavelength (Å)')
+    ax.set_ylabel('Normalized Flux')
+    ax.legend(fontsize=8)
+    plt.tight_layout()
+    plt.show()
+    
+    
 #import CSV
 import pandas as pd
 df = pd.read_csv(r'C:\Users\ilakk\OneDrive\Desktop\astr502\astr502_spring2026\ASTR502_Master_Parameters_List.csv')
 
 df_query = df.loc[df['hostname'] == query]
 t_eff = df_query['tic_teff'].item()
-print(t_eff)
+print(f't_eff: {t_eff}')
 
