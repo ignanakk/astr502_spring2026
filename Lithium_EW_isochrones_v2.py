@@ -97,7 +97,7 @@ plt.title("EAGLES Lithium Equivalent Width Isochrones")
 
 #import CSV
 import pandas as pd
-df = pd.read_csv(r"C:\Users\ilakk\OneDrive\Desktop\astr502\astr502_spring2026\ASTR502_Master_Parameters_List.csv")
+df = pd.read_csv(r"C:\Users\ilakk\OneDrive\Desktop\astr502\astr502_spring2026\ASTR502_Master_Parameters_List (version 4).csv")
 
 # Confirm the column names
 print(df.columns.tolist())

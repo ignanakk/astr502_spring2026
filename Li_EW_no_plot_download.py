@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Mon Apr 20 10:29:36 2026
+
+@author: ilakk
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Mon Apr  6 09:46:48 2026
 
 @author: ilakk
@@ -20,7 +27,8 @@ import time
 eso = Eso()
 eso.login(username='ignanakk', store_password=True)
 
-query = 'TOI-277'
+query = 'K2-210'
+
 instrument = 'HARPS' 
 results = eso.query_surveys(target=query, surveys=instrument)
 print(results)
@@ -106,7 +114,6 @@ plt.plot(xvals, yvals, color='tab:pink', lw=0.5)
 plt.title(f"Full Spectrum for {query}")
 plt.xlabel("Wavelength (Å)")
 plt.ylabel("Flux")
-plt.savefig(os.path.join(plot_dir, f'{query}_Full_Spectrum.png'), bbox_inches='tight', dpi=150)
 plt.show()
 '''
 
@@ -226,7 +233,6 @@ else:
 ax.set_title(r'Lithium 6707.76 $\AA$')
 ax.set_xlabel('Wavelength (Å)')
 ax.set_ylabel('Normalized Flux')
-plt.savefig(os.path.join(plot_dir, f'{query}_Locally_Normalized_Li.png'), bbox_inches='tight', dpi=150)
 plt.show()
 
 #RV value from SIMBAD
@@ -352,7 +358,6 @@ else:
 graphs[1,1].set_title(r'Ca II K 3968 $\AA$')
 graphs[1,1].set_xlabel('Wavelength (Å)')
 graphs[1,1].set_ylabel('Normalized Flux')
-plt.savefig(os.path.join(plot_dir, f'{query}_Locally_Normalized_Key_Spectral_Features.png'), bbox_inches='tight', dpi=150)
 plt.show()
 
 # ==== LITHIUM PLOT with empirical center detection ====
@@ -386,7 +391,6 @@ plt.suptitle('\nNormalized + Residual Correction', fontsize=8)
 ax.set_xlabel('Wavelength (Å)')
 ax.set_ylabel('Normalized Flux')
 plt.tight_layout()
-plt.savefig(os.path.join(plot_dir, f'{query}_Normalized_Residual_Correction.png'), bbox_inches='tight', dpi=150)
 plt.show()
 
 def ew_diagnostic(wavelength, flux, li_center=6707.8, window=6.0, search_window=1.5,
@@ -482,7 +486,6 @@ def ew_diagnostic(wavelength, flux, li_center=6707.8, window=6.0, search_window=
     ax2.set_title('Normalised — blue = integrated area')
 
     plt.tight_layout()
-    plt.savefig(os.path.join(plot_dir, f'{query}_Li_EW_diagnostic.png'), bbox_inches='tight', dpi=150)
     plt.show()
     print(f'lithium ew: {ew_val}')
     return ew_val, detected_center

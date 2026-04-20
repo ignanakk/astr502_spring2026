@@ -15,65 +15,13 @@ from astropy.io import fits
 from astropy import constants as const
 import time
 
-
-# 1. QUERY
-eso = Eso()
-eso.login(username='ignanakk', store_password=True)
-
-query = 'TOI-277'
-instrument = 'HARPS' 
-results = eso.query_surveys(target=query, surveys=instrument)
-print(results)
+# 1-3. LOAD MANUALLY DOWNLOADED FILE
+path = r"C:\Users\ilakk\Downloads\ADP.2022-05-04T01_06_50.170.fits"
+instrument= 'HARPS'
+query='HIP 67522'
 
 plot_dir = rf'C:\Users\ilakk\OneDrive\Desktop\astr502\Plots\{query}'
 os.makedirs(plot_dir, exist_ok=True)
-
-results = eso.query_surveys(target=query, surveys=instrument)
-
-if results is None or len(results) == 0:
-    raise ValueError(f"No results found for {query}.")
-
-# 2. FILTER FOR SPECTRA 
-if "Product category" in results.colnames:
-    mask = [("SPECTRUM" in str(x)) for x in results["Product category"]]
-    spec = results[mask]
-else:
-    spec = results
-
-use = spec if len(spec) > 0 else results
-arc = str(use["ARCFILE"][0]).strip()
-
-#print(f"Target: {query} | Downloading ARCFILE: {arc}")
-
-# 3. DOWNLOAD FITS FILES
-
-target_dir = r"C:\Users\ilakk\OneDrive\Desktop\astr502\working_dowloads"
-timestamp = int(time.time())
-filename = f"{query}_{instrument}_{timestamp}.fits"
-path = os.path.join(target_dir, filename)
-
-
-#path = os.path.join(os.path.expanduser("~"), "eso_temp_file1.fits")
-
-#GEMINI AI
-try:
-    print(f"Attempting manual download to: {path}")
-    url = f"https://dataportal.eso.org/dataPortal/file/{arc}"
-    response = requests.get(url, stream=True, timeout=30)
-    
-    if response.status_code == 200:
-        with open(path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-        print("Download successful.")
-    else:
-        print(f"Download failed. Status: {response.status_code}")
-        print("Note: If status is 401/403, you must use eso.login().")
-        path = None
-except Exception as e:
-    print(f"Error during download: {e}")
-    path = None
-
 
 # 4. OPEN AND PREPARE DATA
 if path and os.path.exists(path):

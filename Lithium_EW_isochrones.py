@@ -38,7 +38,27 @@ if len(ages) < 5:
 else:
     ax.text(0.01, 0.95, str(ages) + " Myr", transform=ax.transAxes)
 
-plt.show()
 
 import os
 print(os.listdir(r'C:\Users\ilakk\OneDrive\Desktop\astr502\eagles'))
+
+
+#import CSV
+import pandas as pd
+df = pd.read_csv(r"C:\Users\ilakk\OneDrive\Desktop\astr502\astr502_spring2026\ASTR502_Master_Parameters_List (version 4).csv")
+
+# Confirm the column names
+print(df.columns.tolist())
+t_eff = df['tic_teff']
+li_ew= df['Li_EW']
+
+#plt.plot(t_eff,li_ew,'.')
+
+newdf = df[['hostname', 'tic_teff', 'Li_EW']].dropna()
+print(newdf)
+# Overlay data points on the same axes as the isochrones
+ax.plot(t_eff, li_ew, '.', label='Observed Stars', color='black')
+
+# Now show the combined plot
+plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+plt.show()
